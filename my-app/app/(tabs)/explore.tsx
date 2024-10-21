@@ -1,5 +1,6 @@
+import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Image, Platform, Button, View, ActivityIndicator, TextInput } from 'react-native';
+import { StyleSheet, Image, Platform, Button, View, ActivityIndicator, TextInput, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -8,14 +9,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TabTwoScreen() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [username, setUsername] = useState(''); 
-  const [password, setPassword] = useState(''); 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false); 
 
   const checkAuthToken = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
-        setIsAuthenticated(true); 
+        setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
       }
@@ -26,14 +28,37 @@ export default function TabTwoScreen() {
   };
 
   useEffect(() => {
-    checkAuthToken(); 
+    checkAuthToken();
   }, []);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post('http://10.134.198.29:1337/api/users', {
+        identifier: email,
+        password: password,
+      });
+
+      const { jwt } = response.data; // jwt = token retourné par Strapi
+      await AsyncStorage.setItem('authToken', jwt);
+      setIsAuthenticated(true);
+    } catch (error) {
+      Alert.alert('Erreur', 'Identifiants incorrects.');
+      console.error('Erreur de connexion:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
-      await AsyncStorage.removeItem('authToken'); 
-      setIsAuthenticated(false); 
-      console.log('Déconnexion réussie');
+      await AsyncStorage.removeItem('authToken');
+      setIsAuthenticated(false);
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
     }
@@ -54,9 +79,11 @@ export default function TabTwoScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder="Identifiant"
-          value={username}
-          onChangeText={setUsername} 
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
 
         <TextInput
@@ -64,16 +91,14 @@ export default function TabTwoScreen() {
           placeholder="Mot de passe"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry 
+          secureTextEntry
         />
-        <Button
-          title="Se connecter"
-          onPress={async () => {
-            
-            await AsyncStorage.setItem('authToken', 'dummy-token'); 
-            setIsAuthenticated(true); 
-          }}
-        />
+
+        {loading ? (
+          <ActivityIndicator size="small" color="#0000ff" />
+        ) : (
+          <Button title="Se connecter" onPress={handleLogin} />
+        )}
       </SafeAreaView>
     );
   }
@@ -90,13 +115,6 @@ export default function TabTwoScreen() {
       <ThemedView>
         <ThemedText type="title">Mon compte</ThemedText>
       </ThemedView>
-      {Platform.select({
-        ios: (
-          <ThemedText>
-            Ici on va fetch les infos du type depuis la DB 
-          </ThemedText>
-        ),
-      })}
 
       <View style={styles.logoutButtonContainer}>
         <Button title="Déconnexion" onPress={handleLogout} />
@@ -119,13 +137,13 @@ const styles = StyleSheet.create({
   loginContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#ADD8E6', 
+    backgroundColor: '#ADD8E6',
     borderRadius: 20,
-    padding: 20, 
-    width: '80%', 
+    padding: 20,
+    width: '80%',
     height: '30%',
-    maxWidth: 400, 
-    alignSelf: 'center', 
+    maxWidth: 400,
+    alignSelf: 'center',
     marginTop: 325,
   },
   loader: {
@@ -134,13 +152,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   input: {
-    width: '100%', 
-    height: 40, 
-    borderColor: '#ccc', 
+    width: '100%',
+    height: 40,
+    borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 5,
-    paddingHorizontal: 10, 
+    paddingHorizontal: 10,
     marginVertical: 10,
-    backgroundColor: 'black',
+    backgroundColor: 'white',
   },
 });

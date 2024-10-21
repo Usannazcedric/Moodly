@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "employees",
+  "info": {
+    "singularName": "employee",
+    "pluralName": "employees",
+    "displayName": "Employees",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "password": {
+      "type": "password",
+      "required": true
+    },
+    "mail": {
+      "type": "email",
+      "required": true
+    },
+    "UID": {
+      "type": "uid"
+    },
+    "username": {
+      "type": "string"
+    }
+  }
+}
