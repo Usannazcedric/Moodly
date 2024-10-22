@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * admin service
+ * mood service
  */
 
 const { createCoreService } = require('@strapi/strapi').factories;
 
-module.exports = createCoreService('api::admin.admin');
+module.exports = createCoreService('api::mood.mood');

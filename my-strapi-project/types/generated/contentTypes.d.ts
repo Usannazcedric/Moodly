@@ -1,19 +1,31 @@
 import type { Struct, Schema } from '@strapi/strapi';
 
-export interface ApiAdminAdmin extends Struct.CollectionTypeSchema {
-  collectionName: 'admins';
+export interface ApiMoodMood extends Struct.CollectionTypeSchema {
+  collectionName: 'moods';
   info: {
-    singularName: 'admin';
-    pluralName: 'admins';
-    displayName: 'Manager';
+    singularName: 'mood';
+    pluralName: 'moods';
+    displayName: 'Mood';
     description: '';
   };
   options: {
     draftAndPublish: true;
   };
   attributes: {
-    password: Schema.Attribute.Password;
-    mail: Schema.Attribute.Email;
+    Rate: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 1;
+          max: 5;
+        },
+        number
+      >;
+    user: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    date: Schema.Attribute.Date;
+    Description: Schema.Attribute.Text & Schema.Attribute.Required;
     createdAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     publishedAt: Schema.Attribute.DateTime;
@@ -22,39 +34,7 @@ export interface ApiAdminAdmin extends Struct.CollectionTypeSchema {
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<'oneToMany', 'api::admin.admin'> &
-      Schema.Attribute.Private;
-  };
-}
-
-export interface ApiEmployeeEmployee extends Struct.CollectionTypeSchema {
-  collectionName: 'employees';
-  info: {
-    singularName: 'employee';
-    pluralName: 'employees';
-    displayName: 'Employees';
-    description: '';
-  };
-  options: {
-    draftAndPublish: true;
-  };
-  attributes: {
-    password: Schema.Attribute.Password & Schema.Attribute.Required;
-    mail: Schema.Attribute.Email & Schema.Attribute.Required;
-    UID: Schema.Attribute.UID;
-    username: Schema.Attribute.String;
-    createdAt: Schema.Attribute.DateTime;
-    updatedAt: Schema.Attribute.DateTime;
-    publishedAt: Schema.Attribute.DateTime;
-    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
-      Schema.Attribute.Private;
-    locale: Schema.Attribute.String & Schema.Attribute.Private;
-    localizations: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::employee.employee'
-    > &
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::mood.mood'> &
       Schema.Attribute.Private;
   };
 }
@@ -538,6 +518,7 @@ export interface PluginUsersPermissionsUser
       'manyToOne',
       'plugin::users-permissions.role'
     >;
+    moods: Schema.Attribute.Relation<'oneToMany', 'api::mood.mood'>;
     createdAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     publishedAt: Schema.Attribute.DateTime;
@@ -926,8 +907,7 @@ export interface AdminTransferTokenPermission
 declare module '@strapi/strapi' {
   export module Public {
     export interface ContentTypeSchemas {
-      'api::admin.admin': ApiAdminAdmin;
-      'api::employee.employee': ApiEmployeeEmployee;
+      'api::mood.mood': ApiMoodMood;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;
       'plugin::i18n.locale': PluginI18NLocale;

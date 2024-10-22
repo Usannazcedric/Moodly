@@ -1,9 +1,9 @@
 'use strict';
 
 /**
- * admin router
+ * mood router
  */
 
 const { createCoreRouter } = require('@strapi/strapi').factories;
 
-module.exports = createCoreRouter('api::admin.admin');
+module.exports = createCoreRouter('api::mood.mood');

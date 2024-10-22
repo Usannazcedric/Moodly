@@ -1,23 +1,38 @@
 import axios from 'axios';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Image, Platform, Button, View, ActivityIndicator, TextInput, Alert } from 'react-native';
+import { StyleSheet, Image, Button, View, ActivityIndicator, TextInput, Alert, FlatList } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+// Définition de l'interface Mood
+interface Mood {
+  id: number;
+  Rate: number;
+  Description: string | null;
+  user: {
+    id: number;
+    username: string;
+  };
+}
+
 export default function TabTwoScreen() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState('');
+  const [moods, setMoods] = useState<Mood[]>([]); 
 
   const checkAuthToken = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
         setIsAuthenticated(true);
+        fetchUserData(token); 
+        fetchUserMoods(token); 
       } else {
         setIsAuthenticated(false);
       }
@@ -39,14 +54,16 @@ export default function TabTwoScreen() {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://10.134.198.29:1337/api/users', {
+      const response = await axios.post('http://10.134.198.29:1337/api/auth/local', {
         identifier: email,
         password: password,
       });
 
-      const { jwt } = response.data; // jwt = token retourné par Strapi
+      const { jwt, user } = response.data; 
       await AsyncStorage.setItem('authToken', jwt);
       setIsAuthenticated(true);
+      setUsername(user.username); 
+      fetchUserMoods(jwt); 
     } catch (error) {
       Alert.alert('Erreur', 'Identifiants incorrects.');
       console.error('Erreur de connexion:', error);
@@ -55,15 +72,44 @@ export default function TabTwoScreen() {
     }
   };
 
+  const fetchUserData = async (token: string) => {
+    try {
+      const response = await axios.get('http://10.134.198.29:1337/api/users/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUsername(response.data.username); 
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données utilisateur:', error);
+    }
+  };
+
+  const fetchUserMoods = async (token: string) => {
+    try {
+      const response = await axios.get('http://10.134.198.29:1337/api/moods?populate=*', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setMoods(response.data.data.filter((mood: Mood) => mood.user.id === response.data.id)); 
+    } catch (error) {
+      console.error('Erreur lors de la récupération des moods:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('authToken');
       setIsAuthenticated(false);
+      setUsername(''); 
+      setMoods([]); 
+      Alert.alert('Déconnexion réussie', 'Vous avez été déconnecté.');
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
     }
   };
-
+  
   if (isAuthenticated === null) {
     return (
       <View style={styles.loader}>
@@ -114,11 +160,33 @@ export default function TabTwoScreen() {
     >
       <ThemedView>
         <ThemedText type="title">Mon compte</ThemedText>
+        {username ? (
+          <ThemedText type="subtitle">Bienvenue, {username} !</ThemedText>
+        ) : (
+          <ThemedText type="subtitle">Chargement...</ThemedText>
+        )}
       </ThemedView>
 
       <View style={styles.logoutButtonContainer}>
         <Button title="Déconnexion" onPress={handleLogout} />
       </View>
+
+      <ThemedView>
+        <ThemedText type="title">Mes Humeurs</ThemedText>
+        {moods.length > 0 ? (
+          <FlatList
+            data={moods}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.moodItem}>
+                <ThemedText>{`Humeur: ${item.Rate} - ${item.Description || 'Pas de description'}`}</ThemedText>
+              </View>
+            )}
+          />
+        ) : (
+          <ThemedText>Aucune humeur enregistrée.</ThemedText>
+        )}
+      </ThemedView>
     </ParallaxScrollView>
   );
 }
@@ -160,5 +228,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginVertical: 10,
     backgroundColor: 'white',
+  },
+  moodItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
 });
