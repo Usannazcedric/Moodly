@@ -1,5 +1,41 @@
 import type { Struct, Schema } from '@strapi/strapi';
 
+export interface ApiManagerManager extends Struct.CollectionTypeSchema {
+  collectionName: 'managers';
+  info: {
+    singularName: 'manager';
+    pluralName: 'managers';
+    displayName: 'Manager';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    mail: Schema.Attribute.Email;
+    password: Schema.Attribute.Password;
+    Team: Schema.Attribute.Relation<
+      'oneToMany',
+      'plugin::users-permissions.user'
+    >;
+    Confirmed: Schema.Attribute.Boolean;
+    Username: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    publishedAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::manager.manager'
+    > &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiMoodMood extends Struct.CollectionTypeSchema {
   collectionName: 'moods';
   info: {
@@ -489,7 +525,6 @@ export interface PluginUsersPermissionsUser
     displayName: 'User';
   };
   options: {
-    timestamps: true;
     draftAndPublish: false;
   };
   attributes: {
@@ -519,6 +554,7 @@ export interface PluginUsersPermissionsUser
       'plugin::users-permissions.role'
     >;
     moods: Schema.Attribute.Relation<'oneToMany', 'api::mood.mood'>;
+    myteam: Schema.Attribute.Relation<'manyToOne', 'api::manager.manager'>;
     createdAt: Schema.Attribute.DateTime;
     updatedAt: Schema.Attribute.DateTime;
     publishedAt: Schema.Attribute.DateTime;
@@ -907,6 +943,7 @@ export interface AdminTransferTokenPermission
 declare module '@strapi/strapi' {
   export module Public {
     export interface ContentTypeSchemas {
+      'api::manager.manager': ApiManagerManager;
       'api::mood.mood': ApiMoodMood;
       'plugin::upload.file': PluginUploadFile;
       'plugin::upload.folder': PluginUploadFolder;

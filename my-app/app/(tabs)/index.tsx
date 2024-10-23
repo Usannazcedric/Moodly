@@ -29,23 +29,36 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const checkAuthToken = async () => {
-      try {
-        const token = await AsyncStorage.getItem('authToken');
-        if (token) {
-          setIsAuthenticated(true);
-          const decodedToken = parseJwt(token);
-          setUserId(decodedToken.id);
-        } else {
-          setIsAuthenticated(false);
-          setUserId(null);
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification de l\'authentification:', error);
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        setIsAuthenticated(true);
+        const decodedToken = parseJwt(token);
+        setUserId(decodedToken.id);
+      } else {
+        setIsAuthenticated(false);
+        setUserId(null);
       }
     };
 
-    checkAuthToken();
+    checkAuthToken(); // Vérification initiale
+
+    const interval = setInterval(checkAuthToken, 5000); // Vérification toutes les 5 secondes
+
+    return () => clearInterval(interval); // Nettoyage lors du démontage
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('authToken');
+      setIsAuthenticated(false);
+      setUserId(null);
+      setDescription('');
+      setSelectedMood(null);
+      Alert.alert('Déconnexion réussie', 'Vous êtes maintenant déconnecté.');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
 
   const handleConfirmMood = async () => {
     if (selectedMood === null) {
