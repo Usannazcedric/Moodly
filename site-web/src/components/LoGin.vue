@@ -1,36 +1,44 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router'; 
 import axios from 'axios';
 
-// Variables réactives
 const email = ref('');
 const password = ref('');
 const message = ref('');
-const token = ref('');
+const router = useRouter(); 
 
-// Fonction de connexion
 const login = async () => {
   try {
-    // Requête pour récupérer les managers
     const response = await axios.get('http://localhost:1337/api/managers');
+    const managers = response.data.data;
 
-    // Vérification des données reçues
-    const manager = response.data.data.find(
-      (manager) => manager.mail === email.value && manager.Confirmed
+    const manager = managers.find(
+      (m) => m.mail === email.value && m.Confirmed
     );
 
     if (manager) {
-      // Générer un token fictif pour la connexion
-      token.value = 'faketoken_' + manager.documentId;  // Génération de token basé sur documentId ou autre logique
-      localStorage.setItem('token', token.value); // Stocker le token dans le local storage
-      message.value = 'Connexion réussie'; // Afficher un message de succès
+      const token = 'token_' + manager.id;
+      localStorage.setItem('token', token);
+      message.value = `Connexion réussie ! Bienvenue, ${manager.Username}.`;
     } else {
-      message.value = 'Email ou mot de passe incorrect'; // Si pas de correspondance
+      message.value = 'Identifiants incorrects ou compte non confirmé.';
     }
   } catch (error) {
-    console.error(error);
-    message.value = 'Une erreur s\'est produite lors de la connexion'; // Message d'erreur en cas de problème avec la requête
+    console.error('Erreur lors de la connexion:', error);
+    message.value = 'Erreur lors de la connexion. Veuillez réessayer.';
   }
+};
+
+const logout = () => {
+  // Suppression du token du local storage
+  localStorage.removeItem('token');
+  message.value = 'Déconnexion réussie.';
+};
+
+const goToHome = () => {
+  // Redirection vers la page d'accueil
+  router.push('/'); // Assurez-vous que cela correspond à votre route d'accueil
 };
 </script>
 
@@ -62,14 +70,31 @@ const login = async () => {
       </div>
 
       <button type="submit" class="login-btn">Connexion</button>
+      <p class="message">{{ message }}</p>
     </form>
 
-    <!-- Affichage du message -->
-    <p v-if="message" class="message">{{ message }}</p>
+    <button @click="logout" class="logout-btn">Déconnexion</button>
+    <button @click="goToHome" class="home-btn">Retour à l'accueil</button>
   </div>
 </template>
 
+
+
 <style scoped>
+.logout-btn, .home-btn {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: #42b883;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.logout-btn:hover, .home-btn:hover {
+  background-color: #38a169;
+}
 .login-container {
   display: flex;
   flex-direction: column;
