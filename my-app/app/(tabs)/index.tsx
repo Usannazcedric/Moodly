@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, Button, View, Alert, Text, TouchableOpacity, TextInput } from 'react-native';
+import { Image, StyleSheet, Platform, Button, View, Alert, TextInput } from 'react-native';
+import Slider from '@react-native-community/slider';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -12,9 +13,7 @@ function parseJwt(token: string) {
   const jsonPayload = decodeURIComponent(
     atob(base64)
       .split('')
-      .map(function (c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      })
+      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
       .join('')
   );
 
@@ -24,7 +23,7 @@ function parseJwt(token: string) {
 export default function HomeScreen() {
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [description, setDescription] = useState<string>(''); 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [userId, setUserId] = useState<number | null>(null); 
 
@@ -35,7 +34,7 @@ export default function HomeScreen() {
         if (token) {
           setIsAuthenticated(true);
           const decodedToken = parseJwt(token);
-          setUserId(decodedToken.id);  
+          setUserId(decodedToken.id);
         } else {
           setIsAuthenticated(false);
           setUserId(null);
@@ -45,11 +44,7 @@ export default function HomeScreen() {
       }
     };
 
-    const interval = setInterval(checkAuthToken, 5000);
-
     checkAuthToken();
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleConfirmMood = async () => {
@@ -70,27 +65,27 @@ export default function HomeScreen() {
 
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem('authToken'); 
+      const token = await AsyncStorage.getItem('authToken');
       if (!token || !userId) {
         Alert.alert('Erreur', 'Utilisateur non authentifié.');
         return;
       }
 
-      const response = await axios.post('http://10.134.198.29:1337/api/moods', {
-        data: {  
+      await axios.post('http://10.134.198.29:1337/api/moods', {
+        data: {
           Rate: selectedMood,
-          user: userId,  
-          Description: description, 
+          user: userId,
+          Description: description,
         }
       }, {
         headers: {
-          Authorization: `Bearer ${token}`,  
+          Authorization: `Bearer ${token}`,
         },
       });
 
       Alert.alert('Succès', 'Votre humeur a été enregistrée avec succès !');
-      setDescription(''); 
-      setSelectedMood(null); 
+      setDescription('');
+      setSelectedMood(null);
     } catch (error) {
       console.error('Erreur lors de l\'envoi de l\'humeur:', error);
       Alert.alert('Erreur', 'Une erreur est survenue lors de l\'envoi de votre humeur.');
@@ -111,25 +106,18 @@ export default function HomeScreen() {
         ios: (
           <>
             <ThemedText>Comment vous sentez-vous aujourd'hui ?</ThemedText>
-            <View style={styles.moodContainer}>
-              {[1, 2, 3, 4, 5].map((mood) => (
-                <TouchableOpacity
-                  key={mood}
-                  style={[
-                    styles.moodButton,
-                    selectedMood === mood && styles.moodButtonSelected, 
-                    selectedMood === mood && styles.moodButtonSelectedGlow,
-                  ]}
-                  onPress={() => setSelectedMood(mood)}
-                >
-                  <Text style={[
-                    styles.moodText,
-                    selectedMood === mood && styles.moodTextSelected,
-                  ]}>
-                    {mood}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <View style={styles.sliderContainer}>
+              <Slider
+                minimumValue={1}
+                maximumValue={5}
+                step={1}
+                value={selectedMood !== null ? selectedMood : 1} 
+                onValueChange={(value) => setSelectedMood(value)} 
+                style={styles.slider}
+                minimumTrackTintColor="#87CEEB"
+                maximumTrackTintColor="#A1CEDC"
+              />
+              <ThemedText style={styles.sliderValue}>{selectedMood || 1}</ThemedText>
             </View>
             <TextInput
               style={styles.descriptionInput}
@@ -143,7 +131,7 @@ export default function HomeScreen() {
               <Button
                 title="Confirmer mon Mood"
                 onPress={handleConfirmMood}
-                disabled={loading || !isAuthenticated} 
+                disabled={loading || !isAuthenticated}
               />
             </View>
             {loading && <ThemedText>Envoi en cours...</ThemedText>}
@@ -161,37 +149,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  moodContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-  },
-  moodButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
+  sliderContainer: {
     alignItems: 'center',
-    backgroundColor: '#ADD8E6',
-    marginHorizontal: 10,
+    marginVertical: 20,
   },
-  moodButtonSelected: {
-    backgroundColor: '#87CEEB',
+  slider: {
+    width: '80%',
+    height: 40,
   },
-  moodButtonSelectedGlow: {
-    shadowColor: '#87CEEB',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  moodText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  moodTextSelected: {
-    color: '#FFF200', 
+  sliderValue: {
+    fontSize: 20,
+    marginTop: 10,
+    color: 'orange',
   },
   buttonContainer: {
     marginTop: 20,
@@ -209,6 +178,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginVertical: 20,
-    color: 'white', // Changer la couleur du texte en blanc
+    color: 'white',
   },
 });

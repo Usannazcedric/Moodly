@@ -7,7 +7,6 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Définition de l'interface Mood
 interface Mood {
   id: number;
   Rate: number;
@@ -24,15 +23,15 @@ export default function TabTwoScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('');
-  const [moods, setMoods] = useState<Mood[]>([]); 
+  const [moods, setMoods] = useState<Mood[]>([]);
 
   const checkAuthToken = async () => {
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
         setIsAuthenticated(true);
-        fetchUserData(token); 
-        fetchUserMoods(token); 
+        fetchUserData(token);
+        fetchUserMoods(token);
       } else {
         setIsAuthenticated(false);
       }
@@ -59,16 +58,31 @@ export default function TabTwoScreen() {
         password: password,
       });
 
-      const { jwt, user } = response.data; 
+      const { jwt, user } = response.data;
       await AsyncStorage.setItem('authToken', jwt);
       setIsAuthenticated(true);
-      setUsername(user.username); 
-      fetchUserMoods(jwt); 
+      setUsername(user.username);
+      fetchUserMoods(jwt);
     } catch (error) {
       Alert.alert('Erreur', 'Identifiants incorrects.');
       console.error('Erreur de connexion:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const parseJwt = (token: string) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('Erreur lors du décryptage du token:', error);
+      return null;
     }
   };
 
@@ -79,7 +93,7 @@ export default function TabTwoScreen() {
           Authorization: `Bearer ${token}`,
         },
       });
-      setUsername(response.data.username); 
+      setUsername(response.data.username);
     } catch (error) {
       console.error('Erreur lors de la récupération des données utilisateur:', error);
     }
@@ -87,12 +101,21 @@ export default function TabTwoScreen() {
 
   const fetchUserMoods = async (token: string) => {
     try {
+      const decodedToken = parseJwt(token);
+      if (!decodedToken || !decodedToken.id) {
+        throw new Error('Impossible de décrypter le token.');
+      }
+
+      const userId = decodedToken.id;
+
       const response = await axios.get('http://10.134.198.29:1337/api/moods?populate=*', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setMoods(response.data.data.filter((mood: Mood) => mood.user.id === response.data.id)); 
+
+      const userMoods = response.data.data.filter((mood: Mood) => mood.user.id === userId);
+      setMoods(userMoods);
     } catch (error) {
       console.error('Erreur lors de la récupération des moods:', error);
     }
@@ -102,14 +125,31 @@ export default function TabTwoScreen() {
     try {
       await AsyncStorage.removeItem('authToken');
       setIsAuthenticated(false);
-      setUsername(''); 
-      setMoods([]); 
+      setUsername('');
+      setMoods([]);
       Alert.alert('Déconnexion réussie', 'Vous avez été déconnecté.');
     } catch (error) {
       console.error('Erreur lors de la déconnexion:', error);
     }
   };
-  
+
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    const fetchMoodsPeriodically = async () => {
+      const token = await AsyncStorage.getItem('authToken');
+      if (token) {
+        fetchUserMoods(token);
+      }
+    };
+
+    if (isAuthenticated) {
+      interval = setInterval(fetchMoodsPeriodically, 5000);
+    }
+
+    return () => clearInterval(interval); 
+  }, [isAuthenticated]);
+
   if (isAuthenticated === null) {
     return (
       <View style={styles.loader}>
@@ -121,7 +161,18 @@ export default function TabTwoScreen() {
   if (!isAuthenticated) {
     return (
       <SafeAreaView style={styles.loginContainer}>
-        <ThemedText type="title">Connexion</ThemedText>
+       <View style={styles.textContainer}>
+    <ThemedText type="title" style={{ color: 'black' }}>Se connecter</ThemedText>
+    <ThemedText type="title" style={{ color: 'grey', fontSize: 14, lineHeight: 18 }}>
+      Partagez, discutez et améliorez
+      
+    </ThemedText>
+    <ThemedText type="title" style={{ color: 'grey', fontSize: 14, lineHeight: 18 }}>
+    ce que vous ressentez avec votre équipe.
+    </ThemedText>
+    
+  </View>
+
 
         <TextInput
           style={styles.input}
@@ -167,26 +218,28 @@ export default function TabTwoScreen() {
         )}
       </ThemedView>
 
-      <View style={styles.logoutButtonContainer}>
-        <Button title="Déconnexion" onPress={handleLogout} />
-      </View>
-
-      <ThemedView>
-        <ThemedText type="title">Mes Humeurs</ThemedText>
+      <ThemedView style={styles.moodContainer}>
+        <ThemedText type="title" style={{ color: 'black' }}>Mes Humeurs</ThemedText>
         {moods.length > 0 ? (
           <FlatList
             data={moods}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.moodItem}>
-                <ThemedText>{`Humeur: ${item.Rate} - ${item.Description || 'Pas de description'}`}</ThemedText>
+                <ThemedText style={[styles.moodText, { color: 'black' }]}>
+                  {`Humeur: ${item.Rate} - ${item.Description || 'Pas de description'}`}
+                </ThemedText>
               </View>
             )}
           />
         ) : (
-          <ThemedText>Aucune humeur enregistrée.</ThemedText>
+          <ThemedText style={{ color: 'black' }}>Aucune humeur enregistrée.</ThemedText>
         )}
       </ThemedView>
+
+      <View style={styles.logoutButtonContainer}>
+        <Button title="Déconnexion" onPress={handleLogout} />
+      </View>
     </ParallaxScrollView>
   );
 }
@@ -197,9 +250,35 @@ const styles = StyleSheet.create({
     height: 200,
     resizeMode: 'cover',
   },
+  moodContainer: {
+    padding: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  textContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center', // Pour centrer le texte
+    marginVertical: 20, // Ajoute un peu d'espace vertical
+    marginBottom: 70
+  },
+  moodItem: {
+    padding: 15,
+    marginVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  moodText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
   logoutButtonContainer: {
-    left: 0,
-    right: 0,
     paddingHorizontal: 20,
   },
   loginContainer: {
@@ -209,10 +288,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     width: '80%',
-    height: '30%',
+    height: '40%',
     maxWidth: 400,
     alignSelf: 'center',
-    marginTop: 325,
+    marginTop: 275,
   },
   loader: {
     flex: 1,
@@ -228,10 +307,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginVertical: 10,
     backgroundColor: 'white',
-  },
-  moodItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
   },
 });
