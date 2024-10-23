@@ -71,11 +71,11 @@
       "target": "api::mood.mood",
       "mappedBy": "user"
     },
-    "myteam": {
+    "team": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::manager.manager",
-      "inversedBy": "Team"
+      "target": "api::team.team",
+      "inversedBy": "users_permissions_users"
     }
   }
 }

@@ -1,44 +1,46 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router'; 
 import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 const email = ref('');
 const password = ref('');
 const message = ref('');
-const router = useRouter(); 
+const router = useRouter();
 
 const login = async () => {
   try {
-    const response = await axios.get('http://localhost:1337/api/managers');
-    const managers = response.data.data;
+    const response = await axios.post('http://localhost:1337/api/auth/local', {
+      identifier: email.value,
+      password: password.value,
+    });
 
-    const manager = managers.find(
-      (m) => m.mail === email.value && m.Confirmed
-    );
+    const { jwt, user } = response.data;
+    console.log(response)
+    console.log(user)
 
-    if (manager) {
-      const token = 'token_' + manager.id;
-      localStorage.setItem('token', token);
-      message.value = `Connexion réussie ! Bienvenue, ${manager.Username}.`;
-    } else {
-      message.value = 'Identifiants incorrects ou compte non confirmé.';
+    if (jwt) {
+      localStorage.setItem('jwt', jwt);
+      const respons2 = await axios.get('http://localhost:1337/api/users/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log(respons2)
+       
+
+      // if (user.role.name === 'Manager') {
+      //   message.value = 'Connexion réussie !';
+        
+      //   router.push('/home');
+      // } else {
+      //   message.value = "Vous n'avez pas les droits nécessaires.";
+      // }
     }
   } catch (error) {
-    console.error('Erreur lors de la connexion:', error);
-    message.value = 'Erreur lors de la connexion. Veuillez réessayer.';
+    console.error(error);
+    message.value = "Erreur de connexion. Veuillez vérifier vos informations.";
   }
-};
-
-const logout = () => {
-  // Suppression du token du local storage
-  localStorage.removeItem('token');
-  message.value = 'Déconnexion réussie.';
-};
-
-const goToHome = () => {
-  // Redirection vers la page d'accueil
-  router.push('/'); // Assurez-vous que cela correspond à votre route d'accueil
 };
 </script>
 
@@ -72,11 +74,9 @@ const goToHome = () => {
       <button type="submit" class="login-btn">Connexion</button>
       <p class="message">{{ message }}</p>
     </form>
-
-    <button @click="logout" class="logout-btn">Déconnexion</button>
-    <button @click="goToHome" class="home-btn">Retour à l'accueil</button>
   </div>
 </template>
+
 
 
 
