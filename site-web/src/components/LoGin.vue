@@ -16,30 +16,29 @@ const login = async () => {
     });
 
     const { jwt, user } = response.data;
-    console.log(response)
-    console.log(user)
 
     if (jwt) {
       localStorage.setItem('jwt', jwt);
-      const respons2 = await axios.get('http://localhost:1337/api/users/me', {
+      const respons2 = await axios.get('http://localhost:1337/api/users/me?populate=role', {
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${jwt}`,
         },
       });
       console.log(respons2)
-       
 
-      // if (user.role.name === 'Manager') {
-      //   message.value = 'Connexion réussie !';
+      if (respons2.data.role.name === 'Manager') {
+        message.value = 'Connexion réussie !';
+        console.log('cool')
         
-      //   router.push('/home');
-      // } else {
-      //   message.value = "Vous n'avez pas les droits nécessaires.";
-      // }
+        router.push('/');
+      } else {
+        message.value = "Vous n'avez pas les droits nécessaires.";
+        console.log('pas cool')
+      }
     }
   } catch (error) {
     console.error(error);
-    message.value = "Erreur de connexion. Veuillez vérifier vos informations.";
+    message.value = "Erreur de connexion. Veuillez vérifier vos informations. Ou vous n'etes pas Manageur";
   }
 };
 </script>
