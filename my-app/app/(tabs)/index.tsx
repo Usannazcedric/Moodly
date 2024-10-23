@@ -40,11 +40,11 @@ export default function HomeScreen() {
       }
     };
 
-    checkAuthToken(); // Vérification initiale
+    checkAuthToken();
 
-    const interval = setInterval(checkAuthToken, 5000); // Vérification toutes les 5 secondes
+    const interval = setInterval(checkAuthToken, 5000); 
 
-    return () => clearInterval(interval); // Nettoyage lors du démontage
+    return () => clearInterval(interval); 
   }, []);
 
   const handleLogout = async () => {
