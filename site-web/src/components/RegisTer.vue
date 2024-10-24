@@ -38,9 +38,9 @@
   
         <div class="form-group">
           <label for="team">Sélectionnez une équipe</label>
-          <select v-model="selectedTeam">
+          <select v-model="selectedTeam" style="width: 104.5%;">
             <option v-for="team in teams" :key="team.id" :value="team.id">
-              {{ team.Name }} <!-- Correction ici -->
+              {{ team.Name }} 
             </option>
           </select>
         </div>
@@ -67,7 +67,7 @@
   const fetchTeams = async () => {
     try {
       const response = await axios.get('http://localhost:1337/api/teams');
-      teams.value = response.data.data; // Récupération correcte des équipes depuis l'API
+      teams.value = response.data.data;
     } catch (error) {
       console.error('Erreur lors de la récupération des équipes:', error);
     }
@@ -99,8 +99,8 @@
 
       if (managerResponse.data.role.name === 'Manager') {
         await axios.put(`http://localhost:1337/api/users/${userId}`, {
-          role: 2, // Assigne le rôle 'Public'
-          team: selectedTeam.value ? selectedTeam.value : null, // Assigne l'équipe sélectionnée à l'utilisateur
+          role: 2, 
+          team: selectedTeam.value ? selectedTeam.value : null, 
         }, {
           headers: {
             Authorization: `Bearer ${jwt}`,
@@ -188,5 +188,7 @@
     font-size: 1rem;
     color: green;
   }
+
+
   </style>
   

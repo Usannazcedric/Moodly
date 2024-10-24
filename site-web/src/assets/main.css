@@ -1,1 +1,20 @@
 
+/* styles.css */
+
+body {
+    font-family: 'Roboto', sans-serif; /* Applique la police Roboto à tout le corps de l'application */
+    line-height: 1.6; /* Améliore la lisibilité */
+    margin: 0; /* Enlève les marges par défaut */
+    padding: 0; /* Enlève le remplissage par défaut */
+    background-color: #f5f5f5; /* Une couleur de fond douce */
+    color: #333; /* Couleur du texte */
+}
+
+/* Vous pouvez également définir des styles supplémentaires pour d'autres éléments si nécessaire */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700; /* Utilise un poids plus gras pour les titres */
+}
+
+p {
+    margin-bottom: 1.5rem; /* Espace entre les paragraphes */
+}

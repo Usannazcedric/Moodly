@@ -1,9 +1,10 @@
 <template>
   <div class="home-container">
+    <div class="centered">
     <h2>{{ message }}</h2>
+</div>
   
     <div v-if="isLoggedIn">
-      <!-- Graphiques -->
       <div class="mood-chart p-4 bg-white rounded shadow">
         <h2 class="text-xl font-semibold mb-4">Graphique des humeurs</h2>
         <div style="position: relative; width: 100%; height: 400px">
@@ -17,7 +18,6 @@
         <div v-if="error">{{ error }}</div>
       </div>
 
-      <!-- Tableau des notes -->
       <div class="mood-table p-4 bg-white rounded shadow" v-if="!loadingTable">
         <h2 class="text-xl font-semibold mb-4">Tableau des notes</h2>
         <table class="table-auto w-full">
@@ -32,7 +32,7 @@
             <tr v-for="mood in moodsTable" :key="mood.key">
               <td class="border px-4 py-2">{{ mood.date }}</td>
               <td class="border px-4 py-2">{{ mood.description }}</td>
-              <td class="border px-4 py-2">{{ mood.rate }}</td> <!-- Affiche la note directement -->
+              <td class="border px-4 py-2">{{ mood.rate }}</td> 
             </tr>
           </tbody>
         </table>
@@ -62,7 +62,6 @@ import {
   Legend
 } from 'chart.js';
 
-// Enregistrement des composants requis pour les graphiques
 Chart.register(LineController, LineElement, PointElement, LinearScale, Title, CategoryScale, Tooltip, Legend);
 
 const router = useRouter();
@@ -182,7 +181,7 @@ const fetchData = async () => {
 const fetchTableData = async () => {
   try {
     const token = localStorage.getItem('jwt');
-    const userId = 1; // Remplacez par l'ID utilisateur approprié
+    const userId = 1; 
     const response = await axios.get(`http://localhost:1337/api/moods?userId=${userId}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -193,7 +192,7 @@ const fetchTableData = async () => {
       key: item.id,
       date: item.date || new Date(item.createdAt).toISOString().split('T')[0],
       description: item.Description || 'Pas de description',
-      rate: item.Rate // Affichage direct de la note (Rate)
+      rate: item.Rate 
     }));
 
     moodsTable.value = formattedData;
@@ -285,6 +284,18 @@ h2 {
   margin-bottom: 2rem;
   color: #333;
 }
+
+.centered {
+    display: flex;
+    justify-content: center; 
+    align-items: center;    
+    height: 100vh;        
+}
+
+h2 {
+    margin: 0;            
+}
+
 
 .logout-btn, .login-btn {
   padding: 0.75rem;
