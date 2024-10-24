@@ -8,6 +8,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { ThemedView } from '@/components/ThemedView';
+import { red } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
 
 const HEADER_HEIGHT = 250;
 

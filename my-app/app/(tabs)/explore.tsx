@@ -197,7 +197,9 @@ export default function TabTwoScreen() {
 
   if (!isAuthenticated) {
     return (
+      
       <ImageBackground 
+      
       source={require("@/assets/images/login-bg.png")}
       style={styles.backgroundImage}
       >
@@ -249,6 +251,7 @@ export default function TabTwoScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+             placeholderTextColor="black"
           />
         </View>
 
@@ -260,6 +263,7 @@ export default function TabTwoScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            placeholderTextColor="black"
           />
           <NoEyesIcon style={styles.iconRight} />
         </View>
@@ -278,7 +282,7 @@ export default function TabTwoScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: "#D0D0D0", dark: "#353636" }}
+      headerBackgroundColor={{ light: '#FFF2DC', dark: '#FFF2DC' }}
       headerImage={<Image style={styles.headerImage} />}
     >
       <ThemedView>
@@ -326,6 +330,7 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
     resizeMode: "cover",
+    backgroundColor: '#FFF2DC',
   },
   headerImage: {
     width: "100%",

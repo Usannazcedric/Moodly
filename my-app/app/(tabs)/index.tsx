@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image, StyleSheet, Platform, Button, View, Alert, TextInput } from 'react-native';
+import { Image, ImageBackground, StyleSheet, Platform, Button, View, Alert, TextInput, TouchableOpacity } from 'react-native';
 import Slider from '@react-native-community/slider';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
@@ -109,16 +109,20 @@ export default function HomeScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={<Image />}
+      headerBackgroundColor={{ light: '#FFF2DC', dark: '#FFF2DC' }}
+      headerImage={<ImageBackground 
+        source={require("@/assets/images/login-bg.png")}
+        style={styles.backgroundImage}
+    >
+    </ImageBackground>}
     >
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Moodly</ThemedText>
+        <ThemedText type="title">Comment te sens tu </ThemedText>
+        <ThemedText type="title">aujourd’hui?</ThemedText>
       </ThemedView>
       {Platform.select({
         ios: (
           <>
-            <ThemedText>Comment vous sentez-vous aujourd'hui ?</ThemedText>
             <View style={styles.sliderContainer}>
               <Slider
                 minimumValue={1}
@@ -141,11 +145,13 @@ export default function HomeScreen() {
               onChangeText={setDescription}
             />
             <View style={styles.buttonContainer}>
-              <Button
-                title="Confirmer mon Mood"
+              <TouchableOpacity
+                style={[styles.button, !isAuthenticated && styles.buttonDisabled]} // Applique le style disabled si non connecté
                 onPress={handleConfirmMood}
                 disabled={loading || !isAuthenticated}
-              />
+              >
+                <ThemedText style={styles.buttonText}>Confirmer</ThemedText>
+              </TouchableOpacity>
             </View>
             {loading && <ThemedText>Envoi en cours...</ThemedText>}
             {!isAuthenticated && <ThemedText style={styles.errorText}>Veuillez vous connecter pour enregistrer votre mood.</ThemedText>}
@@ -157,9 +163,13 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    resizeMode: "cover",
+  },
   titleContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
   sliderContainer: {
@@ -178,6 +188,21 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
     paddingHorizontal: 20,
+  },
+  button: {
+    backgroundColor: '#4A3426', // Couleur marron clair
+    borderRadius: 28, // Très arrondi
+    paddingVertical: 10, // Ajout de padding vertical
+    alignItems: 'center', // Centrer le texte horizontalement
+    justifyContent: 'center', // Centrer le texte verticalement
+  },
+  buttonDisabled: {
+    backgroundColor: '#D4CEC6', // Couleur marron très clair lorsqu'on n'est pas connecté
+  },
+  buttonText: {
+
+    color: 'white', // Couleur du texte
+    fontSize: 18, // Taille de la police
   },
   errorText: {
     color: 'red',
